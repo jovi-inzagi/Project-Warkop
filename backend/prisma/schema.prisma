@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  name      String
+  role      String   @default("kasir")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  icon      String    @default("Coffee")
+  color     String    @default("#d97706")
+  createdAt DateTime  @default(now())
+  products  Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  sku         String   @unique
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  price       Float
+  cost        Float    @default(0)
+  stock       Int      @default(0)
+  minStock    Int      @default(5)
+  unit        String   @default("pcs")
+  description String   @default("")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orderItems OrderItem[]
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  type        String
+  category    String
+  description String
+  amount      Float
+  method      String   @default("cash")
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+model Order {
+  id        String      @id @default(cuid())
+  orderNo   String      @unique
+  items     OrderItem[]
+  subtotal  Float
+  discount  Float       @default(0)
+  total     Float
+  method    String      @default("cash")
+  status    String      @default("completed")
+  cashier   String      @default("")
+  createdAt DateTime    @default(now())
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+  subtotal  Float
+}
+
+model LogisticItem {
+  id           String   @id @default(cuid())
+  name         String
+  category     String
+  unit         String
+  size         String   @default("")
+  unitPrice    Float
+  quantity     Int      @default(1)
+  totalPrice   Float
+  purchaseDate DateTime @default(now())
+  notes        String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Bahan {
+  id          String   @id @default(cuid())
+  namaBarang  String   @unique
+  satuan      String
+  size        String   @default("")
+  hargaSatuan Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  logistik Logistik[]
+
+  @@map("bahan")
+}
+
+model Logistik {
+  id          String   @id @default(cuid())
+  nama        String
+  satuan      String
+  jumlah      Int
+  hargaSatuan Float
+  hargaTotal  Float
+  tanggalBeli DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bahanId String?
+  bahan   Bahan?  @relation(fields: [bahanId], references: [id], onDelete: SetNull)
+
+  @@index([tanggalBeli])
+  @@index([bahanId])
+  @@map("logistik")
+}
+
+model Harga {
+  id                    String   @id @default(cuid())
+  namaMenu              String   @unique
+  hargaSatuan           Float?
+  hargaDouble           Float?
+  hargaPakaiTelur       Float?
+  hargaDoublePakaiTelur Float?
+  hargaHot              Float?
+  hargaIce              Float?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("harga")
+}
+
+
+
